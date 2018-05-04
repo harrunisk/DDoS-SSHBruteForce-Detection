@@ -1,0 +1,27 @@
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+   csv {
+     source => "message"
+     columns => [ "col.Time", "col.Source", "col.Destination", "ip.src", "ip.dst", "tcp.srcport", "tcp.dstport", "col.Protocol", "ip.len", "col.Info" ]
+   }
+   mutate {
+     convert => [ "ip.len", "integer" ]
+   }
+   date {
+     match => [ "col.Time", "YYYY-MM-dd HH:mm:ss.SSSSSS" ]
+   }
+  }
+output {
+  elasticsearch {
+    hosts => ["http://localhost:9200"]
+    index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}" 
+    document_type => "%{[@metadata][type]}" 
+    user => elastic
+    password => changeme
+  }
+}
